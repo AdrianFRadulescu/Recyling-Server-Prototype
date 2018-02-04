@@ -1,0 +1,23 @@
+{
+  "name": "package",
+  "version": "1.0.0",
+  "description": "\"basic server which turns a button on and off according to client's request\"",
+  "main": "serverSndTest.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AdrianFRadulescu/Recyling-Server-Prototype.git"
+  },
+  "author": "Adrian Radulescu",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/AdrianFRadulescu/Recyling-Server-Prototype/issues"
+  },
+  "homepage": "https://github.com/AdrianFRadulescu/Recyling-Server-Prototype#readme",
+  "dependencies":{
+    "express": "https://github.com/expressjs/express",
+    "johnny-five": "https://github.com/rwaldron/johnny-five"
+  }
+}
