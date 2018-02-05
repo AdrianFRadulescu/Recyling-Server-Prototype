@@ -26,14 +26,13 @@ app.post(/.*/, (request, response) => {
     console.log(request)
     console.log(request.query)
     
+    
     if (request.query.yolo == 'true') {
-        boardController
-    .turnLEDOn();
+        boardController.turnLEDOn();
         response.send('LEDturned On');
     }
     else {
-        boardController
-    .turnLEDOff();
+        boardController.turnLEDOff();
         response.send('LED turned Off');
     }
 

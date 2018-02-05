@@ -16,8 +16,10 @@
     "url": "https://github.com/AdrianFRadulescu/Recyling-Server-Prototype/issues"
   },
   "homepage": "https://github.com/AdrianFRadulescu/Recyling-Server-Prototype#readme",
-  "dependencies":{
-    "express": "https://github.com/expressjs/express",
-    "johnny-five": "https://github.com/rwaldron/johnny-five"
+  "dependencies": {
+    "express": "git+https://github.com/expressjs/express.git",
+    "express-session": "^1.15.6",
+    "johnny-five": "git+https://github.com/rwaldron/johnny-five.git",
+    "mongoose": "^5.0.3"
   }
 }
