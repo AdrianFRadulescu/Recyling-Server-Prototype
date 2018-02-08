@@ -2,7 +2,7 @@ const express = require('express')
 const parser = require('body-parser')
 const boardController = require('./boardControllerTest')
 const app = express()
-const port = 3000
+const port = 4444
 
 app.get('/', (request, response) => {
     console.log('req received')
@@ -10,11 +10,11 @@ app.get('/', (request, response) => {
     console.log(request.query)
     
     if (request.query.yolo == 'true') {
-        boardController.turnLEDOn();
+        boardController.turnLEDOn(request.query.led);
         response.send('LED turned On');
     }
     else {
-        boardController.turnLEDOff();
+        boardController.turnLEDOff(request.query.led);
         response.send('LED turned Off');
     }
     response.end('get some Lene')
@@ -28,11 +28,11 @@ app.post(/.*/, (request, response) => {
     
     
     if (request.query.yolo == 'true') {
-        boardController.turnLEDOn();
+        boardController.turnLEDOn(request.query.led);
         response.send('LEDturned On');
     }
     else {
-        boardController.turnLEDOff();
+        boardController.turnLEDOff(request.query.led);
         response.send('LED turned Off');
     }
 
