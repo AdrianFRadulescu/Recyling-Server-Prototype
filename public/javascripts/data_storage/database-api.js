@@ -19,7 +19,7 @@ const SQL_NULL = require("mysql/lib/protocol/constants/types").NULL;
 const defaultDescription = {
             host    : 'Radulescus-MacBook-Pro.local',
             user    : 'mockadmin',
-            password: fs.readFileSync('../../../private/resources/db_pass'),                // worst way ever to keep the password, don't forget to change it
+            password: fs.readFileSync('./private/resources/db_pass'),                // worst way ever to keep the password, don't forget to change it
             database: 'prototype_database'
 };
 
