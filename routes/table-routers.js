@@ -33,7 +33,7 @@ router.get('/items', function (request, response) {
         {column: 'barcode', compareOperator: '=', compareValue: request.query.barcode}
     ];
 
-    var selectCallback = function (result) {
+    let selectCallback = function (result) {
 
         console.log(result);
 
@@ -189,12 +189,59 @@ router.use('/shoppings', (request, response, next) => {
     next();
 });
 
-router.get('/shoppings', (request, response, next) => {
+/**
+ * Special handler for shoppings tables
+ */
+
+router.get('/bla', (request, response, next) => {
+
+    console.log(request.query.a);
 
 });
 
+router.get('/shoppings', (request, response, next) => {
+
+    let userQueryFields = {
+        columns: ['item_id'],
+        conditions: [
+            {column:'user_id', compareOperator: "=", compareValue: request.query.user_id}
+        ]
+    };
+
+    db.selectFrom('shoppings', userQueryFields, (result) => {
+
+        let items = _.map(result, (item) => {
+            return item.item_id;
+        });
+
+        console.log(items);
+
+        response.end(JSON.stringify({items: items}));
+    });
+
+
+});
+
+
 router.post('/shoppings', (request, response, next) => {
 
+    let userQueryFields = {
+        columns: ['item_id'],
+        conditions: [
+            {column:'user_id', compareOperator: "=", compareValue: request.query.user_id}
+        ]
+    };
+
+    db.selectFrom('shoppings', userQueryFields, (result) => {
+
+        let items = _.map(result, (item) => {
+            return item.item_id;
+        });
+
+        console.log(items);
+
+        response.end(JSON.stringify({items: items}));
+    });
 
 });
 
@@ -305,7 +352,7 @@ router.post('/items', (request, response) => {
 
                     if (result[0].recyclable) {
 
-                        response.send('item found. RECYCLABLE\n' + 'name: ' + response.name);
+                        response.send('item found. RECYCLABLE\n' + 'name: ' + result[0].name);
 
                         // local server controlling board
 
