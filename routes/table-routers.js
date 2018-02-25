@@ -5,17 +5,18 @@
 
 const express = require('express');
 const _ = require('underscore');
+const $ = require('jquery');
 
 
 const dbAPI     = require('../public/javascripts/data_storage/database-api');
 //const boardAPI  = require('../public/javascripts/iot_controllers/board-api');
 const binAPI    = require('../public/javascripts/iot_controllers/bin-api');
 
-var router = express.Router();
+const router = express.Router();
 const db = new dbAPI.DBInterface(dbAPI.DB_DEFAULT_DESCIRPTON);
 
 // simple handling for checking if and item is recyclable or not based on its barcode
-
+/*
 router.get('/items', function (request, response) {
 
     console.log('query:' + request.query.barcode);
@@ -58,7 +59,7 @@ router.get('/items', function (request, response) {
                 response.end('item found.' + ' NOT RECYCLABLE\n');
 
                 //boardAPI.turnLEDOn(0);
-                //setTimeout(function () {bboardAPI.turnLEDOff(0);}, 500);
+                //setTimeout(function () {boardAPI.turnLEDOff(0);}, 500);
 
                 binAPI.turnLedOn(binAPI.binIps[binAPI.binIps.length - 1], 1);
             }
@@ -71,6 +72,8 @@ router.get('/items', function (request, response) {
 
 router.post('/items', function (request, response) {
 
+    console.log(request);
+
     if (request.query.type === 'select') {
 
         if (!isNaN(request.query.barcode)) {
@@ -78,13 +81,13 @@ router.post('/items', function (request, response) {
             console.log('query:' + request.query.barcode);
         }
 
-        var queryFields = {columns: ['item_id', 'name', 'IF (value > 0, 1, 0) as recyclable']};
+        let queryFields = {columns: ['item_id', 'name', 'IF (value > 0, 1, 0) as recyclable']};
 
         queryFields['conditions'] = [
             {column: 'barcode', compareOperator: '=', compareValue: request.query.barcode}
         ];
 
-        var selectCallback = function (result) {
+        let selectCallback = function (result) {
 
             console.log(result);
 
@@ -127,66 +130,72 @@ router.post('/items', function (request, response) {
 
     }
 });
+*/
 
-
-
-
-/// more advanced with middleware is comming
 
 /*
  *  Middleware for HTTP requests
  */
-/*
-router.use('/items', function (request, response, next) {
+
+router.use('/items', (request, response, next) => {
     response.locals.table = 'items';
-    next()
+    next();
 });
 
-router.use('/users', function (request, response, next) {
+router.use('/users', (request, response, next) => {
     response.locals.table = 'users';
-    next()
+    next();
 });
 
-router.use('/products', function (request, response, next) {
+router.use('/products', (request, response, next) => {
     response.locals.table = 'products';
-    next()
+    next();
 });
 
-router.use('/recycling_logs', function (request, response, next) {
+router.use('/recycling_logs', (request, response, next) => {
     response.locals.table = 'recycling_logs';
-    next()
+    next();
 });
 
-router.use('/shops', function (request, response, next) {
+router.use('/shops', (request, response, next) => {
     response.locals.table = 'shops';
-    next()
+    next();
 });
 
-router.use('/vouchers', function (request, response, next) {
+router.use('/vouchers', (request, response, next) => {
     response.locals.table = 'vouchers';
-    next()
+    next();
 });
 
-router.use('/', function(request, response, next) {
+router.use('/shoppings', (request, response, next) => {
+    response.locals.table = 'shoppings';
+    next();
+});
 
-    console.log(request.query);
-    console.log(response.locals.table);
+router.use('/', (request, response, next) => {
+
+
+    console.log(response.locals.table + '\n');
+    console.log(request.query.data + '\n');
+    let queryData = JSON.parse(request.query.data);
+    console.log(queryData);
+    //console.log(response.locals.table);
     // format the sql request fields
 
-    response.locals.queryFields = {type: request.query.type};
+    response.locals.queryFields = {type: queryData.type};
 
-    if (request.query.hasOwnProperty('columns')) {
+    if (queryData.hasOwnProperty('columns')) {
         // add columns
-        response.locals.queryFields['columns'] = request.quey.columns.split(',');
+        response.locals.queryFields['columns'] = queryData.columns;
     } else {
         response.locals.queryFields['columns'] = "*";
     }
 
-    if (request.query.hasOwnProperty('conditions')) {
+    if (queryData.hasOwnProperty('conditions')) {
 
         response.locals.queryFields['conditions'] = [];
 
-        _.forEach(request.query.conditions,
+        _.forEach(queryData.conditions,
             function (condition) {
                 response.locals.queryFields['conditions'].push(condition);
             }
@@ -196,27 +205,155 @@ router.use('/', function(request, response, next) {
         response.locals.queryFields['conditions']= undefined;
     }
 
-    if (request.hasOwnProperty())
-
-    console.log(request.query);
+    //if (request.hasOwnProperty())
 
     next();
 });
 
+/**
+ * Handles get request for items table
+ */
 
-router.get('/', function (request, response) {
+router.get('/items', (request, response) => {
 
     console.log(response.locals.queryFields);
 
-    switch (response.locals.queryFields) {
+    if (response.locals.queryFields.type !== 'select') {
+        response.end('');
+    } else {
+
+        db.selectFrom('items', response.locals.queryFields, (result) => {
+            console.log(result);
+
+            if (result.length === 0) {
+                response.end('could not find item by barcode\n');
+            } else {
+
+                if (result[0].recyclable) {
+
+                    response.send('item found. RECYCLABLE\n' + 'name: ' + response.name);
+
+                    // local server controlling board
+
+                    //boardAPI.turnLEDOn(1);
+                    //setTimeout(function () {boardAPI.turnLEDOff(1);}, 500);
+
+                    // remote server
+
+                    //binAPI.turnLedOn(binAPI.binIps[binAPI.binIps.length - 1], 0);
+
+                    //setTimeout(() => binAPI.turnLedOff(binAPI.binIps[binAPI.binIps.length - 1], 1), 600);
+
+                } else {
+                    response.end('item found.' + ' NOT RECYCLABLE\n');
+
+                    //boardAPI.turnLEDOn(0);
+                    //setTimeout(function () {bboardAPI.turnLEDOff(0);}, 500);
+
+                    //binAPI.turnLedOn(binAPI.binIps[binAPI.binIps.length - 1], 1);
+                }
+            }
+        });
+
+    }
+
+});
+
+router.post('/items', (request, response) => {
+
+
+    console.log('--------------------');
+    console.log(response.locals.queryFields);
+    console.log('--------------------');
+
+    switch (response.locals.queryFields.type) {
+
+        case 'select':
+
+            db.selectFrom('items', response.locals.queryFields, (result) => {
+                console.log(result);
+
+                if (result.length === 0) {
+                    response.end('could not find item by barcode\n');
+                } else {
+
+                    if (result[0].recyclable) {
+
+                        response.send('item found. RECYCLABLE\n' + 'name: ' + response.name);
+
+                        // local server controlling board
+
+                        //boardAPI.turnLEDOn(1);
+                        //setTimeout(function () {boardAPI.turnLEDOff(1);}, 500);
+
+                        // remote server
+
+                        //binAPI.turnLedOn(binAPI.binIps[binAPI.binIps.length - 1], 0);
+
+                        //setTimeout(() => binAPI.turnLedOff(binAPI.binIps[binAPI.binIps.length - 1], 1), 600);
+
+                    } else {
+                        response.end('item found.' + ' NOT RECYCLABLE\n');
+
+                        //boardAPI.turnLEDOn(0);
+                        //setTimeout(function () {bboardAPI.turnLEDOff(0);}, 500);
+
+                        //binAPI.turnLedOn(binAPI.binIps[binAPI.binIps.length - 1], 1);
+                    }
+                }
+            });
+            break;
+        case 'update':
+            db.update('items', response.locals.queryFields);
+            break;
+    }
+});
+
+router.patch('/items', (request, response) => {
+
+    if (response.locals.queryFields !== 'update') {
+        response.end('');
+    } else {
+        db.update('items', response.locals.queryFields);
+    }
+});
+
+/**
+ * Handlers for user tables
+ */
+
+router.get('/users', (request, response) => {
+    if (response.locals.queryFields.type !== 'select') {
+        response.end('');
+    } else {
 
     }
 });
 
-router.post('/', function (request, response) {
+
+router.post('/users', (resquest, response) => {
+
+    switch (response.locals.queryFields.type) {
+
+        case 'select':
+
+            db.selectFrom('users', response.locals.queryFields, (result) => {
+
+                if (result) {
+
+                }
+
+            });
+
+            break;
+        case 'update':
+            break;
+        case 'insert':
+            break;
+    }
 
 });
-*/
-
 
 module.exports = router;
+
+///.../tables/tablename?type=select&columns={}&conditions={};

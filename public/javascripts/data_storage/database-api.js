@@ -27,7 +27,7 @@ const defaultDescription = {
  * Acts like an mediator between server and database
  */
 
-var DBInterface = (function () {
+const DBInterface = (function () {
 
     function RecyclingDatabase(_dbDescription) {
 
@@ -51,7 +51,7 @@ var DBInterface = (function () {
 
         const dbDescription = parameters.dbDescription;
 
-        var dbConnection = mysql.createConnection(dbDescription);
+        let dbConnection = mysql.createConnection(dbDescription);
         dbConnection.connect();
 
         console.log('connected to database');
@@ -75,7 +75,7 @@ var DBInterface = (function () {
 
     function testConnection (parameters) {
 
-        var dbConnection = null;
+        let dbConnection = null;
 
         try {
 
@@ -111,7 +111,7 @@ var DBInterface = (function () {
 
     function jsonToSQL(jsonObj) {
 
-        var sql = '';
+        let sql = '';
 
         /**
          * Uses mysql.escape to sanitize given values
@@ -119,7 +119,7 @@ var DBInterface = (function () {
          * @returns {*}
          */
 
-        var sanitizeValue = function (value) {
+        let sanitizeValue = function (value) {
 
             if (mysql.escape(value) === '' + value) {
                 return value;
@@ -136,7 +136,7 @@ var DBInterface = (function () {
          * @returns {*}
          */
 
-        var addConditions = function (conditions, sql) {
+        let addConditions = function (conditions, sql) {
 
             // add conditions if any
 
@@ -246,7 +246,7 @@ var DBInterface = (function () {
 
     RecyclingDatabase.prototype.insertInto = function (table, queryFields) {
 
-        var dbConnection = connectToDatabase({dbDescription: this.dbDescription});
+        let dbConnection = connectToDatabase({dbDescription: this.dbDescription});
 
         console.log(queryFields.values);
 
@@ -277,7 +277,7 @@ var DBInterface = (function () {
 
     RecyclingDatabase.prototype.selectFrom = function (table, queryFields, use) {
 
-        var dbConnection = connectToDatabase({dbDescription: this.dbDescription});
+        let dbConnection = connectToDatabase({dbDescription: this.dbDescription});
 
         const sql = jsonToSQL({queryType: 'SELECT', tableName: table, selectQueryFields: queryFields});
 
@@ -288,7 +288,7 @@ var DBInterface = (function () {
             if (err) throw err;
             //console.log(response);
 
-            var result = _.map(Object.keys(response), function (key)  {
+            let result = _.map(Object.keys(response), function (key)  {
                 return response[key];
             });
 
@@ -307,7 +307,7 @@ var DBInterface = (function () {
 
     RecyclingDatabase.prototype.update = function(table, queryFields) {
 
-        var dbConnection = connectToDatabase({dbDescription: this.dbDescription});
+        let dbConnection = connectToDatabase({dbDescription: this.dbDescription});
 
         const sql = jsonToSQL({queryType: 'UPDATE', tableName: table, updateQueryFields: queryFields});
 
@@ -329,12 +329,12 @@ var DBInterface = (function () {
 
 // testing
 
-//var db = new DBInterface(defaultDescription);
+//const db = new DBInterface(defaultDescription);
 
 
 //db.insertInto('items', {values: [5,'chio',null,0]});
 /*
-db.selectFrom('users', {columns: ['user_id', 'email', 'balance'], conditions: undefined});
+db.selectFrom('users', {"columns": ['user_id', 'email', 'balance'], conditions: undefined});
 db.selectFrom('users', {columns: ['user_id', 'email', 'balance'],
     conditions: [
         {column: 'user_id', compareOperator: '<=', compareValue: 3},
@@ -379,7 +379,6 @@ db.update('users', {
     ]
 });
 */
-
 
 
 
