@@ -296,6 +296,7 @@ router.get('/items', (request, response) => {
     } else {
 
         db.selectFrom('items', response.locals.queryFields, (result) => {
+
             console.log(result);
 
             if (result.length === 0) {
@@ -304,7 +305,9 @@ router.get('/items', (request, response) => {
 
                 if (result[0].recyclable) {
 
-                    response.send('item found. RECYCLABLE\n' + 'name: ' + response.name);
+                    response.write('item found. RECYCLABLE\n' + 'name: ' + result[0].name + '\n');
+                    response.end();
+                    //response.end(JSON.stringify({items: response}));
 
                     // local server controlling board
 
@@ -318,7 +321,10 @@ router.get('/items', (request, response) => {
                     //setTimeout(() => binAPI.turnLedOff(binAPI.binIps[binAPI.binIps.length - 1], 1), 600);
 
                 } else {
-                    response.end('item found.' + ' NOT RECYCLABLE\n');
+
+                    response.write('item found.' + ' NOT RECYCLABLE\n');
+                    response.end();
+                    //response.end(JSON.stringify({items: response}));
 
                     //boardAPI.turnLEDOn(0);
                     //setTimeout(function () {bboardAPI.turnLEDOff(0);}, 500);
@@ -352,7 +358,11 @@ router.post('/items', (request, response) => {
 
                     if (result[0].recyclable) {
 
-                        response.send('item found. RECYCLABLE\n' + 'name: ' + result[0].name);
+                        //console.log('\n' + JSON.stringify({items: response}) + '\n');
+
+                        response.write('item found. RECYCLABLE\n' + 'name: ' + result[0].name + '\n');
+                        response.end();
+                        //response.end(JSON.stringify({items: response}));
 
                         // local server controlling board
 
@@ -366,8 +376,10 @@ router.post('/items', (request, response) => {
                         //setTimeout(() => binAPI.turnLedOff(binAPI.binIps[binAPI.binIps.length - 1], 1), 600);
 
                     } else {
-                        response.end('item found.' + ' NOT RECYCLABLE\n');
 
+                        response.write('item found.' + ' NOT RECYCLABLE\n');
+                        response.end();
+                        //response.end(JSON.stringify({items: response}));
                         //boardAPI.turnLEDOn(0);
                         //setTimeout(function () {bboardAPI.turnLEDOff(0);}, 500);
 
@@ -396,6 +408,7 @@ router.patch('/items', (request, response) => {
  */
 
 router.get('/users', (request, response) => {
+
     if (response.locals.queryFields.type !== 'select') {
         response.end('');
     } else {
