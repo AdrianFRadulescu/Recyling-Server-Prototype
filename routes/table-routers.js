@@ -132,6 +132,23 @@ router.post('/items', function (request, response) {
 });
 */
 
+/**
+ * Query json format:
+ *
+ * query = {
+ *
+ *  "type": "select"/"update"/"insert"
+ *  "columns": ["item_id", "barcode", "IF(value > 0, TRUE, FALSE) as recyclable'"]
+ *  "conditions": [
+ *      { "column": "item_id", "compareOperator": '>', "compareValue": 1 },
+ *      { "binaryOperator": "and" },
+ *      { "column": 'item_id', "compareOperator": '<', "compareValue": 7 }
+ *  ]
+ * }
+ *
+ */
+
+
 
 /*
  *  Middleware for HTTP requests
@@ -172,12 +189,21 @@ router.use('/shoppings', (request, response, next) => {
     next();
 });
 
+router.get('/shoppings', (request, response, next) => {
+
+});
+
+router.post('/shoppings', (request, response, next) => {
+
+
+});
+
 router.use('/', (request, response, next) => {
 
 
     console.log(response.locals.table + '\n');
-    console.log(request.query.data + '\n');
-    let queryData = JSON.parse(request.query.data);
+    console.log(request.query.query + '\n');
+    let queryData = JSON.parse(request.query.query);
     console.log(queryData);
     //console.log(response.locals.table);
     // format the sql request fields
