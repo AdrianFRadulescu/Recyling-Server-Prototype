@@ -248,10 +248,9 @@ router.post('/shoppings', (request, response, next) => {
 router.use('/', (request, response, next) => {
 
 
-    console.log(response.locals.table + '\n');
-    console.log(request.query.query + '\n');
+
     let queryData = JSON.parse(request.query.query);
-    console.log(queryData);
+
     //console.log(response.locals.table);
     // format the sql request fields
 
@@ -276,6 +275,10 @@ router.use('/', (request, response, next) => {
 
     } else {
         response.locals.queryFields['conditions']= undefined;
+    }
+
+    if (queryData.hasOwnProperty('values')) {
+        response.locals.queryFields['values'] = queryData.values;
     }
 
     //if (request.hasOwnProperty())
@@ -305,8 +308,9 @@ router.get('/items', (request, response) => {
 
                 if (result[0].recyclable) {
 
-                    response.write('item found. RECYCLABLE\n' + 'name: ' + result[0].name + '\n');
-                    response.end();
+                    response.write('item(s) found. RECYCLABLE\n' + 'name: ' + result[0].name + '\n');
+                    response.write(JSON.stringify({items: result}));
+                    response.end('\n');
                     //response.end(JSON.stringify({items: response}));
 
                     // local server controlling board
@@ -322,8 +326,9 @@ router.get('/items', (request, response) => {
 
                 } else {
 
-                    response.write('item found.' + ' NOT RECYCLABLE\n');
-                    response.end();
+                    response.write('item(s) found.' + ' NOT RECYCLABLE\n');
+                    response.write(JSON.stringify({items: result}));
+                    response.end('\n');
                     //response.end(JSON.stringify({items: response}));
 
                     //boardAPI.turnLEDOn(0);
@@ -356,12 +361,11 @@ router.post('/items', (request, response) => {
                     response.end('could not find item by barcode\n');
                 } else {
 
-                    if (result[0].recyclable) {
+                    if (result[0].hasOwnProperty('recyclable') && result[0].recyclable) {
 
-                        //console.log('\n' + JSON.stringify({items: response}) + '\n');
-
-                        response.write('item found. RECYCLABLE\n' + 'name: ' + result[0].name + '\n');
-                        response.end();
+                        response.write('item(s) found. RECYCLABLE\n' + 'name: ' + result[0].name + '\n');
+                        response.write(JSON.stringify({items: result}));
+                        response.end('\n');
                         //response.end(JSON.stringify({items: response}));
 
                         // local server controlling board
@@ -377,8 +381,9 @@ router.post('/items', (request, response) => {
 
                     } else {
 
-                        response.write('item found.' + ' NOT RECYCLABLE\n');
-                        response.end();
+                        response.write('item(s) found.' + ' NOT RECYCLABLE\n');
+                        response.write(JSON.stringify({items: result}));
+                        response.end('\n');
                         //response.end(JSON.stringify({items: response}));
                         //boardAPI.turnLEDOn(0);
                         //setTimeout(function () {bboardAPI.turnLEDOff(0);}, 500);
@@ -390,6 +395,9 @@ router.post('/items', (request, response) => {
             break;
         case 'update':
             db.update('items', response.locals.queryFields);
+            break;
+        case 'insert':
+            db.insertInto('items', );
             break;
     }
 });
