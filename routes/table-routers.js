@@ -252,33 +252,66 @@ router.get('/shoppings', (request, response) => {
                 if (result === undefined || result.length === 0) {
                     response.end('not found');
                 } else {
-                    response.write('found:\n');
-                    response.write(JSON.stringify({entries: result}));
-                    response.end('\n');
-                }
 
+                    let items = _.map(result, (item) => {
+                        return item.item_id;
+                    }).toString();
+
+                    let auxQueryFields = {
+                        columns: ['item_id', 'barcode', 'value'],
+                        conditions: [
+                            {column: 'item_id', compareOperator: ' IN ', compareValue: '(' + items + ')'}
+                        ]
+                    };
+
+                    db.selectFrom('items', auxQueryFields, (auxResult) => {
+
+                        let itemTuples = _.map(auxResult, (itemTuple) => {
+                            return {item_id: itemTuple.item_id, barcode: itemTuple.barcode, value: itemTuple.value};
+                        });
+
+                        response.write('found:\n');
+                        response.write(JSON.stringify({entries: itemTuples}));
+                        response.end();
+                    });
+                }
             });
         }
 
     } else {
 
-        let userQueryFields = {
+        let queryFields = {
             columns: ['item_id'],
             conditions: [
                 {column:'user_id', compareOperator: "=", compareValue: request.query.user_id}
             ]
         };
 
-
-        db.selectFrom('shoppings', userQueryFields, (result) => {
+        db.selectFrom('shoppings', queryFields, (result) => {
 
             let items = _.map(result, (item) => {
                 return item.item_id;
+            }).toString();
+
+            //response.end(JSON.stringify({entries: items}));
+
+            let auxQueryFields = {
+                columns: ['item_id', 'barcode', 'value'],
+                conditions: [
+                    {column: 'item_id', compareOperator: ' IN ', compareValue: '(' + items + ')'}
+                ]
+            };
+
+            db.selectFrom('items', auxQueryFields, (auxResult) => {
+
+                let itemTuples = _.map(auxResult, (itemTuple) => {
+                    return {item_id: itemTuple.item_id, barcode: itemTuple.barcode, value: itemTuple.value};
+                });
+
+                response.end(JSON.stringify({entries: itemTuples}));
+
             });
-
-            response.end(JSON.stringify({entries: items}));
         });
-
     }
 });
 
@@ -298,9 +331,31 @@ router.post('/shoppings', (request, response) => {
                     if (result === undefined || result.length === 0) {
                         response.end('not found');
                     } else {
-                        response.write('found:\n');
-                        response.write(JSON.stringify({entries: result}));
-                        response.end('\n');
+
+                        let items = _.map(result, (item) => {
+                            return item.item_id;
+                        }).toString();
+
+                        // prepare auxiliary query
+
+                        let auxQueryFields = {
+                            columns: ['item_id', 'barcode', 'value'],
+                            conditions: [
+                                {column: 'item_id', compareOperator: ' IN ', compareValue: '(' + items + ')'}
+                            ]
+                        };
+
+                        db.selectFrom('items', auxQueryFields, (auxResult) => {
+
+                            let itemTuples = _.map(auxResult, (itemTuple) => {
+                                return {item_id: itemTuple.item_id, barcode: itemTuple.barcode, value: itemTuple.value};
+                            });
+
+                            response.write('found:\n');
+                            response.write(JSON.stringify({entries: itemTuples}));
+                            response.end();
+                        });
+
                     }
 
                 });
@@ -321,21 +376,37 @@ router.post('/shoppings', (request, response) => {
 
     } else {
 
-        let userQueryFields = {
+        let queryFields = {
             columns: ['item_id'],
             conditions: [
                 {column:'user_id', compareOperator: "=", compareValue: request.query.user_id}
             ]
         };
 
+        db.selectFrom('shoppings', queryFields, (result) => {
 
-        db.selectFrom('shoppings', userQueryFields, (result) => {
-
-            let shoppings = _.map(result, (item) => {
+            let items = _.map(result, (item) => {
                 return item.item_id;
-            });
+            }).toString();
 
-            response.end(JSON.stringify({entries: shoppings}));
+            //response.end(JSON.stringify({entries: items}));
+
+            let auxQueryFields = {
+                columns: ['item_id', 'barcode', 'value'],
+                conditions: [
+                    {column: 'item_id', compareOperator: ' IN ', compareValue: '(' + items + ')'}
+                ]
+            };
+
+            db.selectFrom('items', auxQueryFields, (auxResult) => {
+
+                let itemTuples = _.map(auxResult, (itemTuple) => {
+                    return {item_id: itemTuple.item_id, barcode: itemTuple.barcode, value: itemTuple.value};
+                });
+
+                response.end(JSON.stringify({entries: itemTuples}));
+
+            });
         });
 
     }

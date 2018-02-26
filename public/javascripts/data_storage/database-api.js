@@ -151,7 +151,10 @@ const DBInterface = (function () {
                     if (condition.hasOwnProperty('binaryOperator')) {
                         sql += sanitizeValue(condition.binaryOperator)  + ' ';
                     } else {
-                        sql += sanitizeValue(condition.column)  + ' ' + sanitizeValue(condition.compareOperator)  + ' ' + (typeof(condition.compareValue) === 'string' ?"'" + sanitizeValue(condition.compareValue)  + "'": sanitizeValue(condition.compareValue)) + ' ';
+                        sql += sanitizeValue(condition.column)  + ' ' + sanitizeValue(condition.compareOperator)  + ' '
+                            + (typeof(condition.compareValue) === 'string' && condition.compareValue[0] !== '(' ?
+                                "'" + sanitizeValue(condition.compareValue)  + "'"
+                                : sanitizeValue(condition.compareValue)) + ' ';
                     }
                 });
             }
