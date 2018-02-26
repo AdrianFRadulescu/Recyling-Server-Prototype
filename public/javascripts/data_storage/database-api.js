@@ -185,7 +185,9 @@ const DBInterface = (function () {
                 break;
 
             case 'INSERT':
-                sql += 'INSERT INTO ' + sanitizeValue(jsonObj.tableName)  + ' VALUES(';
+                sql += 'INSERT INTO ' + sanitizeValue(jsonObj.tableName) + (
+                    jsonObj.hasOwnProperty("insertQueryColumns")? '(' + jsonObj.insertQueryColumns.toString() + ')':''
+                )  + ' VALUES(';
 
                 // insert values into query
 
@@ -258,7 +260,7 @@ const DBInterface = (function () {
 
         console.log(queryFields.values);
 
-        const sql = jsonToSQL({queryType: 'INSERT', tableName: table, insertQueryValues: queryFields.values});
+        const sql = jsonToSQL({queryType: 'INSERT', tableName: table, insertQueryColumns: queryFields.columns, insertQueryValues: queryFields.values});
 
         // console.log(sql);
 
@@ -354,10 +356,10 @@ const DBInterface = (function () {
 
 // testing
 
-const db = new DBInterface(defaultDescription);
+//const db = new DBInterface(defaultDescription);
 
 
-//db.insertInto('items', {values: [5,'chio',null,0]});
+//db.insertInto('items', {columns:['name', 'barcode', 'value'], values: ['chio',null,0]});
 /*
 db.deleteFrom('users', {
     conditions: [

@@ -189,28 +189,86 @@ router.use('/shoppings', (request, response, next) => {
     next();
 });
 
+
+router.use('/', (request, response, next) => {
+
+    if (request.query.hasOwnProperty('query')) {
+
+        let queryData = JSON.parse(request.query.query);
+
+        //console.log(response.locals.table);
+        // format the sql request fields
+
+        response.locals.queryFields = {type: queryData.type};
+
+        if (queryData.hasOwnProperty('columns')) {
+            // add columns
+            response.locals.queryFields['columns'] = queryData.columns;
+        } else {
+            response.locals.queryFields['columns'] = "*";
+        }
+
+        if (queryData.hasOwnProperty('conditions')) {
+
+            response.locals.queryFields['conditions'] = [];
+
+            _.forEach(queryData.conditions,
+                function (condition) {
+                    response.locals.queryFields['conditions'].push(condition);
+                }
+            );
+
+        } else {
+            response.locals.queryFields['conditions'] = undefined;
+        }
+
+        if (queryData.hasOwnProperty('values')) {
+            response.locals.queryFields['values'] = queryData.values;
+        }
+
+    }
+
+    next();
+});
+
+
 /**
  * Special handler for shoppings tables
  */
 
-router.get('/bla', (request, response, next) => {
 
-    console.log(request.query.a);
+router.get('/shoppings', (request, response) => {
 
-});
+    if (request.query.hasOwnProperty('query') || response.locals.hasOwnProperty('queryFields')) {
 
-router.get('/shoppings', (request, response, next) => {
+        if (response.locals.queryFields.type !== 'select') {
+            response.end();
+        } else {
 
-    let userQueryFields = {
-        columns: ['item_id'],
-        conditions: [
-            {column:'user_id', compareOperator: "=", compareValue: request.query.user_id}
-        ]
-    };
+            // run select query against mysql db
 
-    if (request.query.hasOwnProperty('type')) {
+            db.selectFrom('shoppings', response.locals.queryFields, (result) => {
+
+                if (result === undefined || result.length === 0) {
+                    response.end('not found');
+                } else {
+                    response.write('found:\n');
+                    response.write(JSON.stringify({entries: result}));
+                    response.end('\n');
+                }
+
+            });
+        }
 
     } else {
+
+        let userQueryFields = {
+            columns: ['item_id'],
+            conditions: [
+                {column:'user_id', compareOperator: "=", compareValue: request.query.user_id}
+            ]
+        };
+
 
         db.selectFrom('shoppings', userQueryFields, (result) => {
 
@@ -218,79 +276,72 @@ router.get('/shoppings', (request, response, next) => {
                 return item.item_id;
             });
 
-            response.end(JSON.stringify({items: items}));
+            response.end(JSON.stringify({entries: items}));
         });
 
     }
 });
 
 
-router.post('/shoppings', (request, response, next) => {
+router.post('/shoppings', (request, response) => {
 
-    let userQueryFields = {
-        columns: ['item_id'],
-        conditions: [
-            {column:'user_id', compareOperator: "=", compareValue: request.query.user_id}
-        ]
-    };
 
-    if (request.query.hasOwnProperty('type')) {
+
+    if (request.query.hasOwnProperty('query') || response.locals.hasOwnProperty('queryFields')) {
+
+        switch (response.locals.queryFields.type) {
+
+            case 'select':
+
+                db.selectFrom('shoppings', response.locals.queryFields, (result) => {
+
+                    if (result === undefined || result.length === 0) {
+                        response.end('not found');
+                    } else {
+                        response.write('found:\n');
+                        response.write(JSON.stringify({entries: result}));
+                        response.end('\n');
+                    }
+
+                });
+
+                break;
+            case 'update':
+                db.update('shoppings', response.locals.queryFields);
+                response.end();
+                break;
+            case 'insert':
+                db.insertInto('shoppings', response.locals.queryFields);
+                response.end();
+                break;
+            case 'delete':
+                break;
+
+        }
 
     } else {
+
+        let userQueryFields = {
+            columns: ['item_id'],
+            conditions: [
+                {column:'user_id', compareOperator: "=", compareValue: request.query.user_id}
+            ]
+        };
+
 
         db.selectFrom('shoppings', userQueryFields, (result) => {
 
-            let items = _.map(result, (item) => {
+            let shoppings = _.map(result, (item) => {
                 return item.item_id;
             });
 
-            response.end(JSON.stringify({items: items}));
+            response.end(JSON.stringify({entries: shoppings}));
         });
 
     }
 
 });
 
-router.use('/', (request, response, next) => {
-
-
-
-    let queryData = JSON.parse(request.query.query);
-
-    //console.log(response.locals.table);
-    // format the sql request fields
-
-    response.locals.queryFields = {type: queryData.type};
-
-    if (queryData.hasOwnProperty('columns')) {
-        // add columns
-        response.locals.queryFields['columns'] = queryData.columns;
-    } else {
-        response.locals.queryFields['columns'] = "*";
-    }
-
-    if (queryData.hasOwnProperty('conditions')) {
-
-        response.locals.queryFields['conditions'] = [];
-
-        _.forEach(queryData.conditions,
-            function (condition) {
-                response.locals.queryFields['conditions'].push(condition);
-            }
-        );
-
-    } else {
-        response.locals.queryFields['conditions']= undefined;
-    }
-
-    if (queryData.hasOwnProperty('values')) {
-        response.locals.queryFields['values'] = queryData.values;
-    }
-
-    //if (request.hasOwnProperty())
-
-    next();
-});
 
 /**
  * Handles get request for items table
@@ -301,6 +352,7 @@ router.get('/items', (request, response) => {
     console.log(response.locals.queryFields);
 
     if (response.locals.queryFields.type !== 'select') {
+
         response.end('');
     } else {
 
@@ -315,7 +367,7 @@ router.get('/items', (request, response) => {
                 if (result[0].recyclable) {
 
                     response.write('item(s) found. RECYCLABLE\n' + 'name: ' + result[0].name + '\n');
-                    response.write(JSON.stringify({items: result}));
+                    response.write(JSON.stringify({entries: result}));
                     response.end('\n');
                     //response.end(JSON.stringify({items: response}));
 
@@ -333,7 +385,7 @@ router.get('/items', (request, response) => {
                 } else {
 
                     response.write('item(s) found.' + ' NOT RECYCLABLE\n');
-                    response.write(JSON.stringify({items: result}));
+                    response.write(JSON.stringify({entries: result}));
                     response.end('\n');
                     //response.end(JSON.stringify({items: response}));
 
@@ -370,7 +422,7 @@ router.post('/items', (request, response) => {
                     if (result[0].hasOwnProperty('recyclable') && result[0].recyclable) {
 
                         response.write('item(s) found. RECYCLABLE\n' + 'name: ' + result[0].name + '\n');
-                        response.write(JSON.stringify({items: result}));
+                        response.write(JSON.stringify({entries: result}));
                         response.end('\n');
                         //response.end(JSON.stringify({items: response}));
 
@@ -388,7 +440,7 @@ router.post('/items', (request, response) => {
                     } else {
 
                         response.write('item(s) found.' + ' NOT RECYCLABLE\n');
-                        response.write(JSON.stringify({items: result}));
+                        response.write(JSON.stringify({entries: result}));
                         response.end('\n');
                         //response.end(JSON.stringify({items: response}));
                         //boardAPI.turnLEDOn(0);
@@ -436,7 +488,7 @@ router.get('/users', (request, response) => {
                 response.end('user not found');
             } else {
                 response.write('user(s) found');
-                response.write(JSON.stringify({items: result}));
+                response.write(JSON.stringify({entries: result}));
                 response.end('\n');
             }
 
@@ -458,7 +510,7 @@ router.post('/users', (request, response) => {
                     response.end('user not found');
                 } else {
                     response.write('user(s) found');
-                    response.write(JSON.stringify({items: result}));
+                    response.write(JSON.stringify({entries: result}));
                     response.end('\n');
                 }
 
@@ -495,7 +547,7 @@ router.get('/vouchers', (request, response) => {
                 response.end('voucher not found');
             } else {
                 response.write('voucher(s) found');
-                response.write(JSON.stringify({items: result}));
+                response.write(JSON.stringify({entries: result}));
                 response.end('\n');
             }
 
@@ -517,7 +569,7 @@ router.post('/vouchers', (request, response) => {
                     response.end('voucher not found');
                 } else {
                     response.write('voucher(s) found');
-                    response.write(JSON.stringify({items: result}));
+                    response.write(JSON.stringify({entries: result}));
                     response.end('\n');
                 }
 
@@ -554,7 +606,7 @@ router.get('/products', (request, response) => {
                 response.end('products not found');
             } else {
                 response.write('product(s) found');
-                response.write(JSON.stringify({items: result}));
+                response.write(JSON.stringify({entries: result}));
                 response.end('\n');
             }
 
@@ -576,7 +628,7 @@ router.post('/products', (request, response) => {
                     response.end('product(s) not found');
                 } else {
                     response.write('product(s) found');
-                    response.write(JSON.stringify({items: result}));
+                    response.write(JSON.stringify({entries: result}));
                     response.end('\n');
                 }
 
@@ -613,7 +665,7 @@ router.get('/shops', (request, response) => {
                 response.end('shop(s) not found');
             } else {
                 response.write('shop(s) found');
-                response.write(JSON.stringify({items: result}));
+                response.write(JSON.stringify({entries: result}));
                 response.end('\n');
             }
 
@@ -635,7 +687,7 @@ router.post('/shops', (request, response) => {
                     response.end('shop(s) not found');
                 } else {
                     response.write('shop(s) found');
-                    response.write(JSON.stringify({items: result}));
+                    response.write(JSON.stringify({entries: result}));
                     response.end('\n');
                 }
 
@@ -672,7 +724,7 @@ router.get('/recycling_logs', (request, response) => {
                 response.end('log(s) not found');
             } else {
                 response.write('log(s) found');
-                response.write(JSON.stringify({items: result}));
+                response.write(JSON.stringify({entries: result}));
                 response.end('\n');
             }
 
@@ -693,7 +745,7 @@ router.post('/recycling_logs', (request, response) => {
                     response.end('log(s) not found');
                 } else {
                     response.write('log(s) found');
-                    response.write(JSON.stringify({items: result}));
+                    response.write(JSON.stringify({entries: result}));
                     response.end('\n');
                 }
 
