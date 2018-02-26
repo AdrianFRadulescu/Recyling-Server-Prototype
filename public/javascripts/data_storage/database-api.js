@@ -207,6 +207,13 @@ const DBInterface = (function () {
                 break;
 
             case 'DELETE':
+
+                sql += 'DELETE FROM ' + sanitizeValue(jsonObj.tableName) + ' ';
+
+                sql = addConditions(jsonObj.deleteQueryFields.conditions, sql);
+
+                sql += ';';
+
                 break;
 
             case 'UPDATE':
@@ -231,6 +238,7 @@ const DBInterface = (function () {
                 console.log(sql);
 
                 break;
+
         }
 
 
@@ -254,7 +262,7 @@ const DBInterface = (function () {
 
         // console.log(sql);
 
-        dbConnection.query(sql, function (err) {
+        dbConnection.query(sql, (err) => {
 
             if (err) throw err;
             else console.log(table.slice(0, -1) + ' inserted');
@@ -283,7 +291,7 @@ const DBInterface = (function () {
 
         console.log(sql);
 
-        dbConnection.query(sql, function (err, response) {
+        dbConnection.query(sql, (err, response) => {
 
             if (err) throw err;
             //console.log(response);
@@ -311,7 +319,7 @@ const DBInterface = (function () {
 
         const sql = jsonToSQL({queryType: 'UPDATE', tableName: table, updateQueryFields: queryFields});
 
-        dbConnection.query(sql, function (err, response) {
+        dbConnection.query(sql, (err)  => {
 
             if (err) throw err;
 
@@ -323,16 +331,40 @@ const DBInterface = (function () {
 
     };
 
+    RecyclingDatabase.prototype.deleteFrom = function (table, queryFields) {
+
+        let dbConnection = connectToDatabase({dbDescription: this.dbDescription});
+
+        const sql = jsonToSQL({queryType: 'DELETE', tableName: table, deleteQueryFields: queryFields});
+
+        dbConnection.query(sql, (err) => {
+
+            if (err) throw err;
+
+            console.log('records deleted');
+
+            closeConnection(dbConnection);
+        });
+    };
+
+
     return RecyclingDatabase;
 })();
 
 
 // testing
 
-//const db = new DBInterface(defaultDescription);
+const db = new DBInterface(defaultDescription);
 
 
 //db.insertInto('items', {values: [5,'chio',null,0]});
+/*
+db.deleteFrom('users', {
+    conditions: [
+        {column: 'user_id', compareOperator: '=', compareValue: 5}
+    ]
+});
+
 /*
 db.selectFrom('users', {"columns": ['user_id', 'email', 'balance'], conditions: undefined});
 db.selectFrom('users', {columns: ['user_id', 'email', 'balance'],
@@ -373,16 +405,12 @@ db.selectFrom('users', {columns: ['*'],
 /*
 db.update('users', {
     columns: ['user_id', 'balance'],
-    values: [, '150'],
+    values: ['150'],
     conditions: [
         {column: 'first_name', compareOperator: 'LIKE',compareValue: '%Guts%'},
     ]
 });
 */
-
-
-
-
 
 exports.DBInterface = DBInterface;
 exports.SQL_NULL = SQL_NULL;
