@@ -208,18 +208,20 @@ router.get('/shoppings', (request, response, next) => {
         ]
     };
 
-    db.selectFrom('shoppings', userQueryFields, (result) => {
+    if (request.query.hasOwnProperty('type')) {
 
-        let items = _.map(result, (item) => {
-            return item.item_id;
+    } else {
+
+        db.selectFrom('shoppings', userQueryFields, (result) => {
+
+            let items = _.map(result, (item) => {
+                return item.item_id;
+            });
+
+            response.end(JSON.stringify({items: items}));
         });
 
-        console.log(items);
-
-        response.end(JSON.stringify({items: items}));
-    });
-
-
+    }
 });
 
 
@@ -232,16 +234,20 @@ router.post('/shoppings', (request, response, next) => {
         ]
     };
 
-    db.selectFrom('shoppings', userQueryFields, (result) => {
+    if (request.query.hasOwnProperty('type')) {
 
-        let items = _.map(result, (item) => {
-            return item.item_id;
+    } else {
+
+        db.selectFrom('shoppings', userQueryFields, (result) => {
+
+            let items = _.map(result, (item) => {
+                return item.item_id;
+            });
+
+            response.end(JSON.stringify({items: items}));
         });
 
-        console.log(items);
-
-        response.end(JSON.stringify({items: items}));
-    });
+    }
 
 });
 
@@ -302,7 +308,7 @@ router.get('/items', (request, response) => {
 
             console.log(result);
 
-            if (result.length === 0) {
+            if (result === undefined || result.length === 0) {
                 response.end('could not find item by barcode\n');
             } else {
 
@@ -357,7 +363,7 @@ router.post('/items', (request, response) => {
             db.selectFrom('items', response.locals.queryFields, (result) => {
                 console.log(result);
 
-                if (result.length === 0) {
+                if (result === undefined || result.length === 0) {
                     response.end('could not find item by barcode\n');
                 } else {
 
@@ -395,9 +401,11 @@ router.post('/items', (request, response) => {
             break;
         case 'update':
             db.update('items', response.locals.queryFields);
+            response.end();
             break;
         case 'insert':
-            db.insertInto('items', );
+            db.insertInto('items', response.locals.queryFields);
+            response.end();
             break;
     }
 });
@@ -405,9 +413,10 @@ router.post('/items', (request, response) => {
 router.patch('/items', (request, response) => {
 
     if (response.locals.queryFields !== 'update') {
-        response.end('');
+        response.end();
     } else {
         db.update('items', response.locals.queryFields);
+        response.end();
     }
 });
 
@@ -418,14 +427,26 @@ router.patch('/items', (request, response) => {
 router.get('/users', (request, response) => {
 
     if (response.locals.queryFields.type !== 'select') {
-        response.end('');
+        response.end();
     } else {
+
+        db.selectFrom('users', response.locals.queryFields, (result) => {
+
+            if (result === undefined || result.length === 0) {
+                response.end('user not found');
+            } else {
+                response.write('user(s) found');
+                response.write(JSON.stringify({items: result}));
+                response.end('\n');
+            }
+
+        });
 
     }
 });
 
 
-router.post('/users', (resquest, response) => {
+router.post('/users', (request, response) => {
 
     switch (response.locals.queryFields.type) {
 
@@ -433,20 +454,265 @@ router.post('/users', (resquest, response) => {
 
             db.selectFrom('users', response.locals.queryFields, (result) => {
 
-                if (result) {
-
+                if (result === undefined || result.length === 0) {
+                    response.end('user not found');
+                } else {
+                    response.write('user(s) found');
+                    response.write(JSON.stringify({items: result}));
+                    response.end('\n');
                 }
 
             });
 
             break;
         case 'update':
+            db.update('users', response.locals.queryFields);
+            response.end();
             break;
         case 'insert':
+            db.insertInto('users', response.locals.queryFields);
+            response.end();
             break;
     }
 
 });
+
+
+/**
+ * Handlers for vouchers tables
+ */
+
+
+router.get('/vouchers', (request, response) => {
+
+    if (response.locals.queryFields.type !== 'select') {
+        response.end();
+    } else {
+
+        db.selectFrom('vouchers', response.locals.queryFields, (result) => {
+
+            if (result === undefined || result.length === 0) {
+                response.end('voucher not found');
+            } else {
+                response.write('voucher(s) found');
+                response.write(JSON.stringify({items: result}));
+                response.end('\n');
+            }
+
+        });
+
+    }
+});
+
+
+router.post('/vouchers', (request, response) => {
+
+    switch (response.locals.queryFields.type) {
+
+        case 'select':
+
+            db.selectFrom('vouchers', response.locals.queryFields, (result) => {
+
+                if (result === undefined || result.length === 0) {
+                    response.end('voucher not found');
+                } else {
+                    response.write('voucher(s) found');
+                    response.write(JSON.stringify({items: result}));
+                    response.end('\n');
+                }
+
+            });
+
+            break;
+        case 'update':
+            db.update('vouchers', response.locals.queryFields);
+            response.end();
+            break;
+        case 'insert':
+            db.insertInto('vouchers', response.locals.queryFields);
+            response.end();
+            break;
+    }
+
+});
+
+
+/**
+ * Handlers for products table
+ */
+
+
+router.get('/products', (request, response) => {
+
+    if (response.locals.queryFields.type !== 'select') {
+        response.end();
+    } else {
+
+        db.selectFrom('products', response.locals.queryFields, (result) => {
+
+            if (result === undefined || result.length === 0) {
+                response.end('products not found');
+            } else {
+                response.write('product(s) found');
+                response.write(JSON.stringify({items: result}));
+                response.end('\n');
+            }
+
+        });
+
+    }
+});
+
+
+router.post('/products', (request, response) => {
+
+    switch (response.locals.queryFields.type) {
+
+        case 'select':
+
+            db.selectFrom('products', response.locals.queryFields, (result) => {
+
+                if (result === undefined || result.length === 0) {
+                    response.end('product(s) not found');
+                } else {
+                    response.write('product(s) found');
+                    response.write(JSON.stringify({items: result}));
+                    response.end('\n');
+                }
+
+            });
+
+            break;
+        case 'update':
+            db.update('products', response.locals.queryFields);
+            response.end();
+            break;
+        case 'insert':
+            db.insertInto('products', response.locals.queryFields);
+            response.end();
+            break;
+    }
+
+});
+
+
+/**
+ * Handlers for shops table
+ */
+
+
+router.get('/shops', (request, response) => {
+
+    if (response.locals.queryFields.type !== 'select') {
+        response.end();
+    } else {
+
+        db.selectFrom('shops', response.locals.queryFields, (result) => {
+
+            if (result === undefined || result.length === 0) {
+                response.end('shop(s) not found');
+            } else {
+                response.write('shop(s) found');
+                response.write(JSON.stringify({items: result}));
+                response.end('\n');
+            }
+
+        });
+
+    }
+});
+
+
+router.post('/shops', (request, response) => {
+
+    switch (response.locals.queryFields.type) {
+
+        case 'select':
+
+            db.selectFrom('shops', response.locals.queryFields, (result) => {
+
+                if (result === undefined || result.length === 0) {
+                    response.end('shop(s) not found');
+                } else {
+                    response.write('shop(s) found');
+                    response.write(JSON.stringify({items: result}));
+                    response.end('\n');
+                }
+
+            });
+
+            break;
+        case 'update':
+            db.update('shops', response.locals.queryFields);
+            response.end();
+            break;
+        case 'insert':
+            db.insertInto('shops', response.locals.queryFields);
+            response.end();
+            break;
+    }
+
+});
+
+
+/**
+ * Handlers for recycling_logs table
+ */
+
+
+router.get('/recycling_logs', (request, response) => {
+
+    if (response.locals.queryFields.type !== 'select') {
+        response.end();
+    } else {
+
+        db.selectFrom('recycling_logs', response.locals.queryFields, (result) => {
+
+            if (result === undefined || result.length === 0) {
+                response.end('log(s) not found');
+            } else {
+                response.write('log(s) found');
+                response.write(JSON.stringify({items: result}));
+                response.end('\n');
+            }
+
+        });
+    }
+});
+
+
+router.post('/recycling_logs', (request, response) => {
+
+    switch (response.locals.queryFields.type) {
+
+        case 'select':
+
+            db.selectFrom('recycling_logs', response.locals.queryFields, (result) => {
+
+                if (result === undefined || result.length === 0) {
+                    response.end('log(s) not found');
+                } else {
+                    response.write('log(s) found');
+                    response.write(JSON.stringify({items: result}));
+                    response.end('\n');
+                }
+
+            });
+
+            break;
+        case 'update':
+            db.update('recycling_logs', response.locals.queryFields);
+            response.end();
+            break;
+        case 'insert':
+            db.insertInto('recycling_logs', response.locals.queryFields);
+            response.end();
+            break;
+    }
+
+});
+
+
 
 module.exports = router;
 
