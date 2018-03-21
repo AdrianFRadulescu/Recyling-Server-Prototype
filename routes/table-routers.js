@@ -9,7 +9,6 @@ const $ = require('jquery');
 
 
 const dbAPI     = require('../public/javascripts/data_storage/database-api');
-//const boardAPI  = require('../public/javascripts/iot_controllers/board-api');
 const binAPI    = require('../public/javascripts/iot_controllers/bin-api');
 
 const router = express.Router();
@@ -148,11 +147,10 @@ router.post('/items', function (request, response) {
  *
  */
 
-
-
 /*
  *  Middleware for HTTP requests
  */
+
 
 router.use('/items', (request, response, next) => {
     response.locals.table = 'items';
@@ -188,7 +186,6 @@ router.use('/shoppings', (request, response, next) => {
     response.locals.table = 'shoppings';
     next();
 });
-
 
 router.use('/', (request, response, next) => {
 
@@ -232,6 +229,8 @@ router.use('/', (request, response, next) => {
 });
 
 
+
+
 /**
  * Special handler for shoppings tables
  */
@@ -242,7 +241,7 @@ router.get('/shoppings', (request, response) => {
     if (request.query.hasOwnProperty('query') || response.locals.hasOwnProperty('queryFields')) {
 
         if (response.locals.queryFields.type !== 'select') {
-            response.end();
+            response.end('------------');
         } else {
 
             // run select query against mysql db
@@ -258,7 +257,7 @@ router.get('/shoppings', (request, response) => {
                     }).toString();
 
                     let auxQueryFields = {
-                        columns: ['item_id', 'barcode', 'value'],
+                        columns: ['item_id', 'barcode', 'value', 'web_link', 'image_web_link', 'name'],
                         conditions: [
                             {column: 'item_id', compareOperator: ' IN ', compareValue: '(' + items + ')'}
                         ]
@@ -267,10 +266,18 @@ router.get('/shoppings', (request, response) => {
                     db.selectFrom('items', auxQueryFields, (auxResult) => {
 
                         let itemTuples = _.map(auxResult, (itemTuple) => {
-                            return {item_id: itemTuple.item_id, barcode: itemTuple.barcode, value: itemTuple.value};
+                            return {
+                                item_id: itemTuple.item_id,
+                                barcode: itemTuple.barcode,
+                                name: itemTuple.name,
+                                value: itemTuple.value,
+                                image_web_link: itemTuple.image_web_link,
+                                web_link: itemTuple.web_link
+
+                            };
                         });
 
-                        response.write('found:\n');
+                        //response.write('found:\n');
                         response.write(JSON.stringify({entries: itemTuples}));
                         response.end();
                     });
@@ -281,7 +288,7 @@ router.get('/shoppings', (request, response) => {
     } else {
 
         let queryFields = {
-            columns: ['item_id'],
+            columns: ['*'],
             conditions: [
                 {column:'user_id', compareOperator: "=", compareValue: request.query.user_id}
             ]
@@ -296,7 +303,7 @@ router.get('/shoppings', (request, response) => {
             //response.end(JSON.stringify({entries: items}));
 
             let auxQueryFields = {
-                columns: ['item_id', 'barcode', 'value'],
+                columns: ['item_id', 'barcode', 'value', 'name', 'image_web_link', 'web_link'],
                 conditions: [
                     {column: 'item_id', compareOperator: ' IN ', compareValue: '(' + items + ')'}
                 ]
@@ -305,7 +312,15 @@ router.get('/shoppings', (request, response) => {
             db.selectFrom('items', auxQueryFields, (auxResult) => {
 
                 let itemTuples = _.map(auxResult, (itemTuple) => {
-                    return {item_id: itemTuple.item_id, barcode: itemTuple.barcode, value: itemTuple.value};
+                    return {
+                        item_id: itemTuple.item_id,
+                        barcode: itemTuple.barcode,
+                        name: itemTuple.name,
+                        value: itemTuple.value,
+                        image_web_link: itemTuple.image_web_link,
+                        web_link: itemTuple.web_link
+
+                    };
                 });
 
                 response.end(JSON.stringify({entries: itemTuples}));
@@ -318,7 +333,9 @@ router.get('/shoppings', (request, response) => {
 
 router.post('/shoppings', (request, response) => {
 
+    console.log('aici query = ' + request.query);
 
+    console.log(request.query.hasOwnProperty('query') || response.locals.hasOwnProperty('queryFields'));
 
     if (request.query.hasOwnProperty('query') || response.locals.hasOwnProperty('queryFields')) {
 
@@ -339,7 +356,7 @@ router.post('/shoppings', (request, response) => {
                         // prepare auxiliary query
 
                         let auxQueryFields = {
-                            columns: ['item_id', 'barcode', 'value'],
+                            columns: ['item_id', 'name', 'barcode', 'value', 'image_web_link', 'web_link'],
                             conditions: [
                                 {column: 'item_id', compareOperator: ' IN ', compareValue: '(' + items + ')'}
                             ]
@@ -348,10 +365,17 @@ router.post('/shoppings', (request, response) => {
                         db.selectFrom('items', auxQueryFields, (auxResult) => {
 
                             let itemTuples = _.map(auxResult, (itemTuple) => {
-                                return {item_id: itemTuple.item_id, barcode: itemTuple.barcode, value: itemTuple.value};
+                                return {
+                                    item_id: itemTuple.item_id,
+                                    barcode: itemTuple.barcode,
+                                    name: itemTuple.name,
+                                    value: itemTuple.value,
+                                    image_web_link: itemTuple.image_web_link,
+                                    web_link: itemTuple.web_link
+                                };
                             });
 
-                            response.write('found:\n');
+                            //response.write('found:\n');
                             response.write(JSON.stringify({entries: itemTuples}));
                             response.end();
                         });
@@ -487,7 +511,14 @@ router.post('/items', (request, response) => {
                 console.log(result);
 
                 if (result === undefined || result.length === 0) {
-                    response.end('could not find item by barcode\n');
+
+                    response.writeContinue('Could not find item by barcode\n');
+
+                    // send request for image
+
+                    // send request for sensor data
+
+
                 } else {
 
                     if (result[0].hasOwnProperty('recyclable') && result[0].recyclable) {
@@ -499,14 +530,14 @@ router.post('/items', (request, response) => {
 
                         // local server controlling board
 
-                        //boardAPI.turnLEDOn(1);
+                        boardAPI.turnLEDOn(1);
                         //setTimeout(function () {boardAPI.turnLEDOff(1);}, 500);
 
                         // remote server
 
                         //binAPI.turnLedOn(binAPI.binIps[binAPI.binIps.length - 1], 0);
 
-                        //setTimeout(() => binAPI.turnLedOff(binAPI.binIps[binAPI.binIps.length - 1], 1), 600);
+                        setTimeout(() => binAPI.turnLedOff(binAPI.binIps[binAPI.binIps.length - 1], 1), 600);
 
                     } else {
 
@@ -517,7 +548,7 @@ router.post('/items', (request, response) => {
                         //boardAPI.turnLEDOn(0);
                         //setTimeout(function () {bboardAPI.turnLEDOff(0);}, 500);
 
-                        //binAPI.turnLedOn(binAPI.binIps[binAPI.binIps.length - 1], 1);
+                        binAPI.turnLedOn(binAPI.binIps[binAPI.binIps.length - 1], 0);
                     }
                 }
             });
