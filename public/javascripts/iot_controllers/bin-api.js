@@ -6,9 +6,9 @@
 const http  = require('http');
 const fs    = require('fs');
 
-var binIPs  = fs.readFileSync('./private/resources/bin-ips').toString().split('\n');
+let binIPs  = fs.readFileSync('./private/resources/bin-ips').toString().split('\n');
 
-var postData = JSON.stringify({led: 0, state: 'on'});
+let postData = JSON.stringify({led: 0, state: 'on'});
 
 const options = {
     hostname: '',
@@ -56,6 +56,10 @@ function turnLedOn(binIP, led) {
     }
 }
 
+/**
+ * Sends request to specified bin in order to retrieve an image of the item
+ * @param binIP
+ */
 
 function getImageOfItem(binIP) {
 
@@ -73,7 +77,7 @@ function getImageOfItem(binIP) {
         const req = http.request(options, function (response) {
             response.pipe(file);
             response.on('end', function () {
-                console.log('No more data in response.');
+                console.log('Image received response.');
             });
         });
 
@@ -111,29 +115,37 @@ function turnLedOff(binIP, led) {
  * @returns {{}}
  */
 
-function getItemData() {
+function getItemData(binIP) {
+
+    options.method = 'GET';
+    options.path = '/data'; pr
 
     if (binIPs.indexOf(binIP) > -1) {
 
         options.hostname = binIP;
 
-        let itemData = {}; // data received from request
+        let itemDataAsString = ''; // data received from request
 
         const req = http.request(options, function (response) {
             response.setEncoding('utf8');
+
             response.on('data', function (chunk) {
                 console.log('BODY: ' + chunk);
-            });
-            response.on('end', function () {
-                console.log('No more data in response.');
+                itemDataAsString += chunk;
             });
 
+            response.on('end', function () {
+                console.log('Item data received.');
+                console.log(itemDataAsString);
+            });
 
         });
 
         req.on('error', function (err) {
             console.error('problem with request: ${err.message}');
         });
+
+
 
         // write data to request body
         //req.write(postData);
@@ -153,3 +165,5 @@ exports.bin = this;
 exports.binIps = binIPs;
 exports.turnLedOn = turnLedOn;
 exports.turnLedOff = turnLedOff;
+exports.getItemData = getItemData;
+exports.getImageOfItem = getImageOfItem;

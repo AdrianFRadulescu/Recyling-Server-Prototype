@@ -456,7 +456,14 @@ router.get('/items', (request, response) => {
             console.log(result);
 
             if (result === undefined || result.length === 0) {
-                response.end('could not find item by barcode\n');
+                response.writeContinue('Could not find item by barcode\n');
+
+                // send request for image
+                binAPI.getImageOfItem(binAPI.binIps[binAPI.binIps.length - 1]);
+
+                // send request for sensor data
+                binAPI.getItemData(binAPI.binIps[binAPI.binIps.length - 1]);
+                response.end();
             } else {
 
                 if (result[0].recyclable) {
@@ -512,12 +519,15 @@ router.post('/items', (request, response) => {
 
                 if (result === undefined || result.length === 0) {
 
-                    response.writeContinue('Could not find item by barcode\n');
+                    // response.writeContinue('Could not find item by barcode\n');
 
                     // send request for image
+                    binAPI.getImageOfItem(binAPI.binIps[binAPI.binIps.length - 1]);
 
                     // send request for sensor data
+                    binAPI.getItemData(binAPI.binIps[binAPI.binIps.length - 1]);
 
+                    response.end();
 
                 } else {
 
@@ -530,8 +540,7 @@ router.post('/items', (request, response) => {
 
                         // local server controlling board
 
-                        boardAPI.turnLEDOn(1);
-                        //setTimeout(function () {boardAPI.turnLEDOff(1);}, 500);
+                       //setTimeout(function () {boardAPI.turnLEDOff(1);}, 500);
 
                         // remote server
 
